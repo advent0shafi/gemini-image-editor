@@ -14,11 +14,13 @@ import {
   Download,
   ExternalLink,
   RefreshCw,
+  InfoIcon,
+  AlertCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
+import toast, { Toaster } from 'react-hot-toast';
 import { editImageWithGemini } from "@/app/actions"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -29,11 +31,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [userPrompt, setUserPrompt] = useState<string>("Hi, This is a picture of me. Can you add a llama next to me?")
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
-
   // Add a new state variable for the API key
   const [apiKey, setApiKey] = useState<string>("")
   const [apiKeyEntered, setApiKeyEntered] = useState<boolean>(false)
+  const [apiKeyError, setApiKeyError] = useState<string>("")
+
+  const [showTips, setShowTips] = useState<boolean>(false)
 
   const pickImage = () => {
     fileInputRef.current?.click()
@@ -51,24 +54,19 @@ export default function Home() {
       reader.readAsDataURL(file)
     }
   }
-
+  const isValidApiKeyFormat = (key: string): boolean => {
+    // Gemini API keys typically start with "AI" followed by alphanumeric characters
+    return /^AIza[0-9A-Za-z_-]{35}$/.test(key)
+  }
   // Modify the generateImage function to use the user-provided API key
   const generateImage = async () => {
     if (!selectedImage) {
-      toast({
-        title: "Error",
-        description: "Please select an image first",
-        variant: "destructive",
-      })
+      toast.error("Please select an image first")
       return
     }
 
     if (!apiKey) {
-      toast({
-        title: "Error",
-        description: "Please enter your Gemini API key",
-        variant: "destructive",
-      })
+      toast.error("Please enter your Gemini API key",)
       return
     }
 
@@ -89,24 +87,18 @@ export default function Home() {
           setGeneratedImage(`data:image/jpeg;base64,${result.imageData}`)
         }
 
-        toast({
-          title: "Success",
-          description: "Image generated successfully!",
-        })
+        toast.success("Image generated successfully!")
       } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to generate image. Please try again.",
-          variant: "destructive",
-        })
+        toast(
+          result.error || "Failed to generate image. Please try again.",
+          {
+            duration: 1000,
+          }
+        );
       }
     } catch (error) {
       console.error("Error generating content:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
+      toast.error("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -115,25 +107,27 @@ export default function Home() {
   // Add a function to handle API key submission
   const handleApiKeySubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (apiKey.trim()) {
-      setApiKeyEntered(true)
-      toast({
-        title: "API Key Saved",
-        description: "Your Gemini API key has been saved for this session.",
-      })
-    } else {
-      toast({
-        title: "Error",
-        description: "Please enter a valid API key",
-        variant: "destructive",
-      })
-    }
-  }
+    setApiKeyError("")
 
+    if (!apiKey.trim()) {
+      setApiKeyError("Please enter a valid API key")
+      return
+    }
+
+    // Validate API key format
+    if (!isValidApiKeyFormat(apiKey)) {
+      setApiKeyError("Invalid API key format. Gemini API keys typically start with 'AIza' followed by 35 characters.")
+      return
+    }
+
+    setApiKeyEntered(true)
+    toast.success("Your Gemini API key has been saved for this session.")
+  }
   // Add a function to reset the API key
   const resetApiKey = () => {
     setApiKey("")
     setApiKeyEntered(false)
+    setApiKeyError("")
   }
 
   // Reset everything
@@ -144,8 +138,14 @@ export default function Home() {
     setUserPrompt("Hi, This is a picture of me. Can you add a llama next to me?")
   }
 
+  // Toggle tips visibility
+  const toggleTips = () => {
+    setShowTips(!showTips)
+  }
+
   return (
     <main className="min-h-screen bg-white dark:bg-black overflow-x-hidden">
+      <Toaster />
       <AnimatePresence mode="wait">
         {!apiKeyEntered ? (
           <motion.div
@@ -181,14 +181,24 @@ export default function Home() {
                 onSubmit={handleApiKeySubmit}
                 className="space-y-4"
               >
-                <Input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Enter your Gemini API key"
-                  className="h-12 bg-gray-50 dark:bg-gray-900 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  required
-                />
+                 <div className="space-y-2">
+                    <Input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="Enter your Gemini API key"
+                      className={`h-12 bg-gray-50 dark:bg-gray-900 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                        apiKeyError ? "border-red-500 dark:border-red-500" : ""
+                      }`}
+                      required
+                    />
+                    {apiKeyError && (
+                      <div className="flex items-start text-xs text-red-500 dark:text-red-400 mt-1">
+                        <AlertCircle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>{apiKeyError}</span>
+                      </div>
+                    )}
+                  </div>
                 <Button
                   type="submit"
                   className="w-full h-12 bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-200 dark:text-black"
@@ -213,9 +223,28 @@ export default function Home() {
                   Get one from Google AI Studio
                   <ExternalLink className="h-3 w-3 ml-1" />
                 </a>
-                <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
-                  You need to enable the "Gemini 2.0 Flash Exp Image Generation" model
-                </p>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mt-4">
+                    <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
+                      How to get a valid API key:
+                    </h3>
+                    <ol className="text-xs text-blue-700 dark:text-blue-400 list-decimal list-inside space-y-1">
+                      <li>
+                        Go to{" "}
+                        <a
+                          href="https://aistudio.google.com/app/apikey"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                        >
+                          Google AI Studio API Keys
+                        </a>
+                      </li>
+                      <li>Sign in with your Google account</li>
+                      <li>Click "Create API key"</li>
+                      <li>Copy the generated key (starts with "AIza")</li>
+                      <li>Paste the key in the input field above</li>
+                    </ol>
+                  </div>
               </motion.div>
             </div>
           </motion.div>
@@ -247,6 +276,15 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={toggleTips}
+                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  >
+                    <InfoIcon className="h-4 w-4 mr-2" />
+                    Tips
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={resetAll}
                     className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                   >
@@ -265,6 +303,28 @@ export default function Home() {
                 </motion.div>
               </div>
             </header>
+
+            {showTips && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
+              >
+                <div className="container mx-auto max-w-7xl px-4 py-4">
+                  <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                    <p className="font-medium">Tips for best results:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>For best performance, use the following languages: English, Spanish (Mexico), Japanese, Chinese, Hindi.</li>
+                      <li>Image generation does not support audio or video inputs.</li>
+                      <li>If the model outputs text only, try asking for image outputs explicitly (e.g. "generate an image", "provide images as you go along", "update the image").</li>
+                      <li>If the model stops generating partway through, try again or try a different prompt.</li>
+                      <li>When generating text for an image, Gemini works best if you first generate the text and then ask for an image with the text.</li>
+                    </ul>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             <div className="flex-1 container mx-auto max-w-7xl px-4 py-6">
               <div className="flex flex-col h-full">
@@ -339,11 +399,7 @@ export default function Home() {
                         variant="outline"
                         className="flex-1 h-10 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300"
                         onClick={() => {
-                          toast({
-                            title: "Camera Access",
-                            description:
-                              "Camera access is not available in web version. Please use the gallery option.",
-                          })
+                          toast.error("Camera access is not available in web version. Please use the gallery option.")
                         }}
                       >
                         <Camera className="h-4 w-4 mr-2" />
@@ -468,7 +524,9 @@ export default function Home() {
                           </motion.div>
                         )}
                       </Button>
+                     
                     </div>
+
                   </motion.div>
 
                   <motion.div
@@ -530,7 +588,7 @@ export default function Home() {
                       <ExternalLink className="h-3 w-3 mr-1" />
                       Source Code
                     </a>
-                    • Created by Mohammed Shafi 
+                    • Created by <a href="https://mohammedshafi.vercel.app/" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">Mohammed Shafi</a> 
                   </motion.div>
                 </div>
               </div>
@@ -541,4 +599,3 @@ export default function Home() {
     </main>
   )
 }
-
