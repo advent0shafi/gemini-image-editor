@@ -236,7 +236,7 @@ export default function Home() {
                   transition={{ delay: 0.1, duration: 0.5 }}
                   className="text-xl font-medium text-gray-900 dark:text-white"
                 >
-                  Gemini Image Editor
+                  Editify Image Editor
                 </motion.h1>
                 <motion.div
                   initial={{ x: 20, opacity: 0 }}
