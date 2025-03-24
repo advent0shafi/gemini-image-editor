@@ -511,14 +511,28 @@ export default function Home() {
 
             <footer className="border-t border-gray-100 dark:border-gray-800 py-4">
               <div className="container mx-auto max-w-7xl px-4">
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6, duration: 0.5 }}
-                  className="text-xs text-center text-gray-400 dark:text-gray-500"
-                >
-                  Powered by Google Gemini • Requires Gemini 2.0 Flash Exp Image Generation model
-                </motion.p>
+                <div className="flex flex-col items-center gap-2">
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6, duration: 0.5 }}
+                    className="text-xs text-center text-gray-400 dark:text-gray-500"
+                  >
+                    Powered by Google Gemini • Requires Gemini 2.0 Flash Exp Image Generation model
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7, duration: 0.5 }}
+                    className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500"
+                  >
+                    <a href="https://github.com/advent0shafi/gemini-image-editor" className="flex items-center hover:text-gray-600 dark:hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      Source Code
+                    </a>
+                    • Created by Mohammed Shafi 
+                  </motion.div>
+                </div>
               </div>
             </footer>
           </motion.div>
