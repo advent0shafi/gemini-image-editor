@@ -34,6 +34,7 @@ export const useApiKey = () => {
     localStorage.setItem('geminiApiKey', key);
     setApiKeyEntered(true);
     toast.success("Your Gemini API key has been saved for this session and browser.");
+    setApiKey(key);
   };
 
   const resetApiKey = () => {

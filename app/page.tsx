@@ -87,10 +87,7 @@ export default function Home() {
                     <p className="text-xs font-medium text-gray-900 dark:text-white mb-2">
                       Edit Instructions
                     </p>
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
+                    <div
                       className="flex-1 flex flex-col "
                     >
                       <Textarea
@@ -127,7 +124,7 @@ export default function Home() {
                           </motion.div>
                         )}
                       </Button>
-                    </motion.div>
+                    </div>
                   </motion.div>
 
                   <ResponseDisplay responseText={responseText} />
