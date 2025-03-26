@@ -1,6 +1,8 @@
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next'
 import './globals.css'
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
 
 export const metadata: Metadata = {
   title: 'Editify - AI Image Editor',
@@ -54,6 +56,7 @@ export default function RootLayout({
     <html lang="en">
       <body>{children}
       <Analytics />
+      <SpeedInsights />
       </body>
     </html>
   )
